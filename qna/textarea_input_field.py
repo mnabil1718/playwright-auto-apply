@@ -17,7 +17,7 @@ class TextAreaInputField(InputField):
 
   def answer(self):
     if self.store.is_key_exists(self.label):
-      answer = self.store.get()
+      answer = self.store.get(self.label)
     else:
       answer = input(f"{self.label}: ")
       self.store.set(self.label, answer)

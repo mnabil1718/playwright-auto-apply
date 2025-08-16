@@ -52,7 +52,4 @@ class SelectInputField(InputField):
       if self.store.is_key_exists(self.label):
           self.store.pop(self.label)
     
-      try:
-          self.locator.select_option(label="")
-      except:
-          self.locator.select_option(label="Select an option")
+      self.locator.select_option(index=0)

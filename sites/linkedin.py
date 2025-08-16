@@ -53,20 +53,20 @@ class LinkedinAutomation:
       self.page.get_by_role("button", name=re.compile("Apply current filter to show", re.I)).click()
 
   def answer_questions(self):
-      fields = self.page.locator("form .fb-dash-form-element")
-      for idx in range(fields.count()):
-          field = input_field_factory(fields.nth(idx), self.store)
+      fields = self.page.locator("form .fb-dash-form-element").all()
+      for item in fields:
+          field = input_field_factory(item, self.store)
 
           if field.is_optional():
               continue
+          
+          if field.is_empty():
+            field.answer()
 
-          if field.has_error():
-              field.clear_answer()
-              field.retry_answer()
-
-          else:
-              if field.is_empty():
-                  field.answer()
+          elif field.has_error():
+            field.clear_answer()
+            field.retry_answer()
+                  
 
 
   def click_modal_dismiss(self):
@@ -138,10 +138,10 @@ class LinkedinAutomation:
   def run(self):
     actions = [
       lambda: self.page.goto("https://linkedin.com/jobs/search"),
-      # lambda: self.search_position_and_location("Software Engineer", "Indonesia"),
+      lambda: self.search_position_and_location("Software Engineer", "Singapore"),
       lambda: self.apply_easy_apply_filter(),
       lambda: self.apply_time_range_filter(),
-      lambda: self.apply_jobs(job_limit=3)
+      lambda: self.apply_jobs(job_limit=10)
     ]
 
     if os.path.exists(self.config["AUTH"]["STORAGE_PATH"]):

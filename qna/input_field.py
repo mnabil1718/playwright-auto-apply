@@ -26,7 +26,7 @@ class InputField(ABC):
   
   def retry_answer(self):
     error_message = self.element.locator(".artdeco-inline-feedback__message").inner_text().strip()
-    print(f"Error for {self.label}: {error_message}")
+    print(f"Error: {error_message}")
     self.answer()
   
   @abstractmethod

@@ -11,7 +11,8 @@ def load_config() -> dict:
     },
     "QNA": {
       "STORAGE_PATH": os.environ["QNA_STORE_PATH"]
-    }
+    },
+    "COMPANY_BLACKLIST": ["Diksha", "Super indo"]
   }
 
   return config

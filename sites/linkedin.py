@@ -73,6 +73,15 @@ class LinkedinAutomation:
       modal = self.page.locator('div[role="dialog"]').last
       modal.get_by_role("button", name=re.compile("Dismiss")).click()
 
+  def _company_filter_match(self, company_name: str):
+    blacklist = self.config.get("COMPANY_BLACKLIST", [])
+    for company in blacklist:
+      if company.casefold() in company_name.casefold():
+          return True
+    
+    return False
+    
+
   def apply_jobs(self, job_limit: int = 10):
       self.page.wait_for_selector("li[data-occludable-job-id]", timeout=15000)
 
@@ -89,6 +98,13 @@ class LinkedinAutomation:
       for i in range(limit):
           job = job_items.nth(i)
           job.click()
+
+          company_name = self.page.locator(
+             "div.job-details-jobs-unified-top-card__company-name a"
+             ).inner_text().strip()
+          
+          if self._company_filter_match(company_name):
+             continue
 
           if not easy_apply_button.count():
               continue
@@ -122,10 +138,10 @@ class LinkedinAutomation:
   def run(self):
     actions = [
       lambda: self.page.goto("https://linkedin.com/jobs/search"),
-      lambda: self.search_position_and_location("Software Engineer", "Indonesia"),
+      # lambda: self.search_position_and_location("Software Engineer", "Indonesia"),
       lambda: self.apply_easy_apply_filter(),
       lambda: self.apply_time_range_filter(),
-      lambda: self.apply_jobs()
+      lambda: self.apply_jobs(job_limit=3)
     ]
 
     if os.path.exists(self.config["AUTH"]["STORAGE_PATH"]):

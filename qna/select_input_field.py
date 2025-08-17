@@ -27,7 +27,7 @@ class SelectInputField(InputField):
 
     else:
       options = self.locator.locator("option")
-      option_texts = [options.nth(i).inner_text().strip() for i in range(options.count())]
+      option_texts = [options.nth(i).inner_text().strip() for i in range(1, options.count())]
       self._print_available_options(option_texts)
       
       # Ask user to pick a number

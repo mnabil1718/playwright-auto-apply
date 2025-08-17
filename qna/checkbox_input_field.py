@@ -24,7 +24,12 @@ class CheckboxInputField(InputField):
       answer = self.store.get(self.label)
 
     else:
-      answer = input(f"{self.label} (Yes/No): ").strip().capitalize()
+      while True:
+        answer = input(f"{self.label} (Yes/No): ").strip().capitalize()
+        if answer == "Yes" or answer == "No":
+           print("Answer can only be (Yes/No)")
+           break
+        
       self.store.set(self.label, answer)
 
     self.element.get_by_text(answer, exact=True).click()

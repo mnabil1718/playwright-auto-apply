@@ -127,7 +127,7 @@ class LinkedinAutomation:
               follow_company_checkbox.set_checked(False, force=True)
 
           human_delay(self.page)
-          submit_application_button.click()
+          # submit_application_button.click()
 
           human_delay(self.page)
           self.click_modal_dismiss()

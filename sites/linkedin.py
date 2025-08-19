@@ -13,8 +13,8 @@ class LinkedinAutomation:
 
   def init_app(self):
     print("initializing app...")
-    if os.path.exists(self.config["AUTH"]["STORAGE_PATH"]):
-      self.context = self.browser.new_context(storage_state=self.config["AUTH"]["STORAGE_PATH"])
+    if os.path.exists(self.config["auth"]["storage_path"]):
+      self.context = self.browser.new_context(storage_state=self.config["auth"]["storage_path"])
     else:
       self.context = self.browser.new_context()
     
@@ -24,32 +24,40 @@ class LinkedinAutomation:
   def auth(self):
     self.page.goto("https://www.linkedin.com/login")
 
-    self.page.get_by_label("Email or Phone").fill(self.config["AUTH"]["EMAIL"])
-    human_delay(self.page)
-    self.page.get_by_label("Password").fill(self.config["AUTH"]["PASSWORD"])
-    human_delay(self.page)
+    self.page.get_by_label("Email or Phone").fill(self.config["auth"]["email"])
+    self.page.get_by_label("Password").fill(self.config["auth"]["password"])
     self.page.get_by_role("button", name="Sign in", exact=True).click()
 
     # Wait for the homepage to load
     self.page.wait_for_load_state("networkidle")
 
     # store auth data into a file
-    self.context.storage_state(path=self.config["AUTH"]["STORAGE_PATH"])
+    self.context.storage_state(path=self.config["auth"]["storage_path"])
 
 
-  def search_position_and_location(self, position, location: str):
-    self.page.get_by_role('combobox', name=re.compile("Search by title, skill, or")).fill(position)
-    human_delay(self.page)
-    self.page.get_by_role('combobox', name=re.compile("City, state, or zip code")).fill(location)
+  def search_position_and_location(self):
+    self.page.get_by_role('combobox', name=re.compile("Search by title, skill, or")).fill(self.config["search"].get("position", "Backend Developer"))
+    self.page.get_by_role('combobox', name=re.compile("City, state, or zip code")).fill(self.config["search"].get("location", "Indonesia"))
     self.page.get_by_role("button", name="Search", exact=True).click()
 
   def apply_easy_apply_filter(self):
       self.page.get_by_role('radio', name="Easy Apply filter.").click()
 
   def apply_time_range_filter(self):
+      """
+      Apply time range filter on when jobs are posted
+      """
+      label_map = {
+         "anytime": "",
+         "pastmonth": "r2592000",
+         "pastweek": "r604800",
+         "past24h": "r86400"
+      }[self.config["search"].get("time_range", "anytime")]
+      selector_label = f'label[for="timePostedRange-{label_map}"]'
+      
       self.page.get_by_role("button", name=re.compile("Date posted filter", re.I)).click()
-      self.page.wait_for_selector('label[for="timePostedRange-r604800"]', state="visible", timeout=5000)
-      self.page.click('label[for="timePostedRange-r604800"]')
+      self.page.wait_for_selector(selector_label, state="visible", timeout=5000)
+      self.page.click(selector_label)
       self.page.get_by_role("button", name=re.compile("Apply current filter to show", re.I)).click()
 
   def answer_questions(self):
@@ -74,7 +82,7 @@ class LinkedinAutomation:
       modal.get_by_role("button", name=re.compile("Dismiss")).click()
 
   def _company_filter_match(self, company_name: str):
-    blacklist = self.config.get("COMPANY_BLACKLIST", [])
+    blacklist = self.config["search"].get("company_blacklist", [])
     for company in blacklist:
       if company.casefold() in company_name.casefold():
           return True
@@ -82,7 +90,8 @@ class LinkedinAutomation:
     return False
     
 
-  def apply_jobs(self, job_limit: int = 10):
+  def apply_jobs(self):
+      job_limit = self.config["search"].get("job_limit", 3)
       self.page.wait_for_selector("li[data-occludable-job-id]", timeout=15000)
 
       # Grab job cards via the attribute-based approach
@@ -98,13 +107,14 @@ class LinkedinAutomation:
       for i in range(limit):
           job = job_items.nth(i)
           job.click()
-
-          company_name = self.page.locator(
-             "div.job-details-jobs-unified-top-card__company-name a"
-             ).inner_text().strip()
           
-          if self._company_filter_match(company_name):
-             continue
+          company_locator = self.page.locator(
+             "div.job-details-jobs-unified-top-card__company-name a"
+             )
+          if company_locator.count():
+            company_name = company_locator.inner_text().strip()
+            if self._company_filter_match(company_name):
+              continue
 
           if not easy_apply_button.count():
               continue
@@ -127,24 +137,24 @@ class LinkedinAutomation:
               follow_company_checkbox.set_checked(False, force=True)
 
           human_delay(self.page)
-          # submit_application_button.click()
+          submit_application_button.click()
 
           human_delay(self.page)
           self.click_modal_dismiss()
 
-          print(f"Applied Easy Apply for job #{i+1}")
+          print(f"Applied job #{i+1}")
           human_delay(self.page)
 
   def run(self):
     actions = [
       lambda: self.page.goto("https://linkedin.com/jobs/search"),
-      lambda: self.search_position_and_location("Software Engineer", "Singapore"),
+      lambda: self.search_position_and_location(),
       lambda: self.apply_easy_apply_filter(),
       lambda: self.apply_time_range_filter(),
-      lambda: self.apply_jobs(job_limit=10)
+      lambda: self.apply_jobs()
     ]
 
-    if os.path.exists(self.config["AUTH"]["STORAGE_PATH"]):
+    if os.path.exists(self.config["auth"]["storage_path"]):
       self.page.goto("https://linkedin.com/jobs/search")
 
       # verify we didn’t get bounced to /feed

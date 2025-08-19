@@ -14,3 +14,11 @@ search:
   company_blacklist:
     - Diksha
     - Super indo
+  remote_filter:
+    - onsite
+    - remote
+    - hybrid
+  experience:
+    - intern
+    - entry
+    - mid-senior

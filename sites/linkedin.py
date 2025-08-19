@@ -88,6 +88,38 @@ class LinkedinAutomation:
           return True
     
     return False
+  
+
+  def apply_remote_filter(self):
+      param_mapping = {
+        "onsite": "On-site",
+        "hybrid": "Hybrid",
+        "remote": "Remote"
+      }
+
+      self.page.get_by_role("button", name=re.compile("Remote filter. Clicking this")).click()
+      for param in self.config["search"].get("remote_filter", []):
+        val = param_mapping[param]
+        self.page.locator('label').filter(has_text=f"{val} Filter by {val}").click()
+      
+      self.page.get_by_role('button', name=re.compile("Apply current filter to show")).click()
+    
+
+  def apply_experience_level_filter(self):
+      param_mapping = {
+        "intern": "Internship",
+        "entry": "Entry level",
+        "mid-senior": "Mid-Senior level",
+        "director": "Director",
+        "executive": "Executive"
+      }
+
+      self.page.get_by_role("button", name=re.compile("Experience level filter.")).click()
+      for param in self.config["search"].get("experience", []):
+        val = param_mapping[param]
+        self.page.locator('label').filter(has_text=f"{val} Filter by {val}").click()
+      
+      self.page.get_by_role('button', name=re.compile("Apply current filter to show")).click()
     
 
   def apply_jobs(self):
@@ -151,6 +183,8 @@ class LinkedinAutomation:
       lambda: self.search_position_and_location(),
       lambda: self.apply_easy_apply_filter(),
       lambda: self.apply_time_range_filter(),
+      lambda: self.apply_remote_filter(),
+      lambda: self.apply_experience_level_filter(),
       lambda: self.apply_jobs()
     ]
 

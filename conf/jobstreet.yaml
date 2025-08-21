@@ -1,0 +1,6 @@
+auth:
+  storage_path: ${JOBSTREET_AUTH_STORAGE_PATH}
+  email: ${JOBSTREET_EMAIL}
+
+qna:
+  storage_path: ${JOBSTREET_QNA_STORE_PATH}

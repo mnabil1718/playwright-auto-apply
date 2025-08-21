@@ -9,9 +9,8 @@ class LinkedinAutomation:
     self.store = store
     self.page = None
     self.context = None
-    self.init_app()
 
-  def init_app(self):
+  def init(self):
     print("initializing app...")
     if os.path.exists(self.config["auth"]["storage_path"]):
       self.context = self.browser.new_context(storage_state=self.config["auth"]["storage_path"])
@@ -29,7 +28,7 @@ class LinkedinAutomation:
     self.page.get_by_role("button", name="Sign in", exact=True).click()
 
     # Wait for the homepage to load
-    self.page.wait_for_load_state("networkidle")
+    self.page.wait_for_url(re.compile(r".*linkedin\.com/(feed|jobs).*"), timeout=15000)
 
     # store auth data into a file
     self.context.storage_state(path=self.config["auth"]["storage_path"])

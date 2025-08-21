@@ -33,7 +33,7 @@ def _walk_and_expand(obj):
     else:
         return obj
 
-def load_config(path="config.yaml") -> dict:
+def load_config(path) -> dict:
     dotenv.load_dotenv()
 
     with open(path, "r") as f:

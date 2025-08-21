@@ -1,14 +1,14 @@
 auth:
-  storage_path: ${AUTH_STORAGE_PATH}
-  email: ${EMAIL}
-  password: ${PASSWORD}
+  storage_path: ${LINKEDIN_AUTH_STORAGE_PATH}
+  email: ${LINKEDIN_EMAIL}
+  password: ${LINKEDIN_PASSWORD}
 
 qna:
-  storage_path: ${QNA_STORE_PATH:-./qna.json}   # fallback default
+  storage_path: ${LINKEDIN_QNA_STORE_PATH}
 
 search:
   time_range: past24h
-  job_limit: 3
+  job_limit: 1
   position: Backend developer
   location: Indonesia
   company_blacklist:

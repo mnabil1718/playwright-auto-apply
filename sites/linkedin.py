@@ -19,7 +19,6 @@ class LinkedinAutomation:
     
     self.page = self.context.new_page()
 
-
   def auth(self):
     self.page.goto("https://www.linkedin.com/login")
 
@@ -32,7 +31,6 @@ class LinkedinAutomation:
 
     # store auth data into a file
     self.context.storage_state(path=self.config["auth"]["storage_path"])
-
 
   def search_position_and_location(self):
     self.page.get_by_role('combobox', name=re.compile("Search by title, skill, or")).fill(self.config["search"].get("position", "Backend Developer"))
@@ -73,8 +71,6 @@ class LinkedinAutomation:
           elif field.has_error():
             field.clear_answer()
             field.retry_answer()
-                  
-
 
   def click_modal_dismiss(self):
       modal = self.page.locator('div[role="dialog"]').last
@@ -87,7 +83,6 @@ class LinkedinAutomation:
           return True
     
     return False
-  
 
   def apply_remote_filter(self):
       param_mapping = {
@@ -103,7 +98,6 @@ class LinkedinAutomation:
       
       self.page.get_by_role('button', name=re.compile("Apply current filter to show")).click()
     
-
   def apply_experience_level_filter(self):
       param_mapping = {
         "intern": "Internship",
@@ -120,7 +114,6 @@ class LinkedinAutomation:
       
       self.page.get_by_role('button', name=re.compile("Apply current filter to show")).click()
     
-
   def apply_jobs(self):
       job_limit = self.config["search"].get("job_limit", 3)
       self.page.wait_for_selector("li[data-occludable-job-id]", timeout=15000)

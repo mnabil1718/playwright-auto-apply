@@ -4,3 +4,7 @@ auth:
 
 qna:
   storage_path: ${JOBSTREET_QNA_STORE_PATH}
+
+search:
+  position: Backend Developer
+  location: Jakarta Raya

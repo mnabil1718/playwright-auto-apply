@@ -8,3 +8,8 @@ qna:
 search:
   position: Backend Developer
   location: Jakarta Raya
+  job_limit: 10
+  company_blacklist:
+    - Diksha
+    - Super indo
+

@@ -1,6 +1,6 @@
 import os, re
 from utils import human_delay
-from qna import input_field_factory
+from qna.linkedin import input_field_factory
 
 class LinkedinAutomation:
   def __init__(self, config, browser, store):

@@ -1,28 +1,52 @@
 import re
 from dataclasses import dataclass
 
-# dataclass works like Struct in other languages
 @dataclass
 class SalaryRange:
-    """
-    Represents salary range. if single-value salary, low and high is the same.
-    """
     low: int
     high: int
 
 def parse_salary_range_idr(salary_text: str) -> SalaryRange:
-    # Remove Rp, dots, non-breaking spaces etc.
-    cleaned = salary_text.replace("Rp", "").replace(".", "").replace("\xa0", " ")
-    # Extract all numbers
-    nums = re.findall(r"\d+", cleaned)
+    # Normalize
+    cleaned = (
+        salary_text.replace("Rp", "")
+                   .replace("\xa0", " ")
+                   .replace("per bulan", "")
+                   .replace("per month", "")
+                   .strip()
+    )
+
+    # Match numbers with . or , as separators
+    nums = re.findall(r"\d[\d.,]*", cleaned)
     if not nums:
         return SalaryRange(0, 0)
-    
+
+    values = [int(n.replace(".", "").replace(",", "")) for n in nums]
+
     if "–" in cleaned or "-" in cleaned:
-        # Range case
-        low, high = int(nums[0]), int(nums[1])
+        low, high = values[0], values[1]
     else:
-        # Single value case (e.g. "Rp 10.000.000 per month")
-        low = high = int(nums[0])
-    
+        low = high = values[0]
+
+    print(low, high)
     return SalaryRange(low, high)
+
+
+def format_min_salary(min_salary: int, labels: list[int]) -> str:
+    """
+    Translate min salary number in config into available filter label
+    8000000 -> 8 Jt
+    6000000 -> 6 Jt
+    """
+
+    if min_salary > max(labels):
+        return f"{min_salary // 1_000_000} Jt +"
+
+    for label in labels:
+        if min_salary <= label:
+            return f"{label // 1_000_000} Jt"
+        
+    return f"Rp. 0"
+
+
+

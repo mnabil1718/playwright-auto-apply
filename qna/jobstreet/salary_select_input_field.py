@@ -75,18 +75,31 @@ class SalarySelectInputField(InputField):
       return value, text
   
   def _select_max_possible_salary(self, option_texts: list[str]) -> str:
-      max_val = 0
+      max_val = -1
       max_opt = ""
 
       print("Calculating max allowed salary...")
-      for opt in option_texts:        
-        val, txt = self._parse_salary_option(opt)
-        if self.salary_range_obj.low <= val and self.salary_range_obj.high >= val:
-            if val > max_val:
-              max_val = val
-              max_opt = txt
-      
-      return max_opt  
+      for opt in option_texts:
+          val, txt = self._parse_salary_option(opt)
+
+          # prefer values within [low, high]
+          if self.salary_range_obj.low <= val <= self.salary_range_obj.high:
+              if val > max_val:
+                  max_val = val
+                  max_opt = txt
+
+      # fallback: if nothing matched inside [low, high],
+      # pick the largest option <= high
+      if not max_opt:
+          for opt in option_texts:
+              val, txt = self._parse_salary_option(opt)
+              if val <= self.salary_range_obj.high and val > max_val:
+                  max_val = val
+                  max_opt = txt
+
+      return max_opt
+
+
 
   def _generate_valid_options(self) -> list[str]:
       opts = []
@@ -100,6 +113,8 @@ class SalarySelectInputField(InputField):
 
   def answer(self):
       answer = None
+
+      print(self.salary_range_obj)
 
       if not self.salary_range_obj:
         if self.store.is_key_exists(self.label):

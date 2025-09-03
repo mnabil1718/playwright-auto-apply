@@ -6,10 +6,18 @@ qna:
   storage_path: ${JOBSTREET_QNA_STORE_PATH}
 
 search:
-  position: Web Developer
+  position: Backend Developer
   location: Jakarta Raya
-  job_limit: 4
+  job_limit: 40
   min_salary: 7000000
+  time_range: 7days
+  work_type:
+    - fulltime
+    - contract
+  remote_filter:
+    - wfo
+    - hybrid
+    - remote
   company_blacklist:
     - Diksha
     - Super indo

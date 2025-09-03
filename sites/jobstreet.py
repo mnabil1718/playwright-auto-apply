@@ -1,5 +1,5 @@
 import os, re
-from utils import human_delay, parse_salary_range_idr, SalaryRange
+from utils import human_delay, parse_salary_range_idr, format_min_salary, SalaryRange
 from qna.jobstreet import input_field_factory
 from playwright.sync_api import expect
 
@@ -68,26 +68,54 @@ class JobstreetAutomation:
 
   def job_type_filter(self):
     self.page.locator("label").filter(has_text="Tampilkan filter jenis").locator("svg").click()
-    self.page.get_by_role("checkbox", name="Full time").click()
-    self.page.get_by_role("checkbox", name="Paruh waktu").click()
-    self.page.get_by_role("checkbox", name="Kontrak/Temporer").click()
-    self.page.get_by_role("checkbox", name="Kasual/Liburan").click()
+    map = {
+       "fulltime": "Full time",
+       "parttime": "Paruh waktu",
+       "contract": "Kontrak/Temporer",
+       "casual": "Kasual/Liburan"
+    }
+
+    filters = self.config["search"].get("work_type", [])
+
+    for key in filters:
+      self.page.get_by_role("checkbox", name=map[key]).click()
+
     self.page.locator("label").filter(has_text="Tampilkan filter jenis").locator("svg").click(force=True)
 
   def remote_filter(self):
+    map = {
+       "wfo": "Kantor",
+       "hybrid": "Hibrid",
+       "remote": "Jarak jauh"
+    }
+
+    filters = self.config["search"].get("remote_filter", [])
+       
     self.page.locator("label").filter(has_text="Tampilkan filter work").locator("svg").click()
-    self.page.get_by_role("checkbox", name="Kantor").click()
-    self.page.get_by_role("checkbox", name="Hibrid").click()
-    self.page.get_by_role("checkbox", name="Jarak jauh").click()
+
+    for key in filters:
+      self.page.get_by_role("checkbox", name=map[key]).click()
+
     self.page.locator("label").filter(has_text="Tampilkan filter jenis").locator("svg").click(force=True)
 
   def min_salary(self):
+    min_sal = self.config["search"].get("min_salary", 7_000_000)
+    labels = [2_000_000, 4_000_000, 6_000_000, 8_000_000, 10_000_000, 15_000_000, 20_000_000, 25_000_000, 40_000_000, 60_000_000, 80_000_000, 100_000_000]
     self.page.locator("label").filter(has_text="Tampilkan filter gaji minimum").locator("svg").click()
-    self.page.get_by_role("radio", name="8 jt").click()
+    self.page.get_by_role("radio", name=format_min_salary(min_sal, labels)).click()
 
   def time_range_filter(self):
+    time_label = {
+       "anytime": "Kapan saja",
+       "today": "Hari Ini",
+       "3days": "3 hari terakhir",
+       "7days": "7 hari terakhir",
+       "14days": "14 hari terakhir",
+       "30days": "30 hari terakhir",
+    }[self.config["search"].get("time_range", "anytime")]
+    
     self.page.locator("label").filter(has_text="Tampilkan filter tanggal").locator('svg').click()
-    self.page.get_by_role("radio", name=re.compile("3 hari terakhir")).click()
+    self.page.get_by_role("radio", name=re.compile(time_label)).click()
 
   def _company_filter_match(self, company_name: str):
     blacklist = self.config["search"].get("company_blacklist", [])

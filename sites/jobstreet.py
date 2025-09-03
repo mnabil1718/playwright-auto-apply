@@ -67,26 +67,27 @@ class JobstreetAutomation:
     self.page.get_by_role('combobox', name=re.compile("Di mana?")).fill(self.config["search"].get("location", "Indonesia"))
 
   def job_type_filter(self):
-    self.page.locator("label").filter(has_text=re.compile("Tampilkan filter jenis")).locator("svg").click()
+    self.page.locator("label").filter(has_text="Tampilkan filter jenis").locator("svg").click()
     self.page.get_by_role("checkbox", name="Full time").click()
-    self.page.get_by_role("checkbox", name="Kontrak/Temporer").click()
     self.page.get_by_role("checkbox", name="Paruh waktu").click()
+    self.page.get_by_role("checkbox", name="Kontrak/Temporer").click()
     self.page.get_by_role("checkbox", name="Kasual/Liburan").click()
+    self.page.locator("label").filter(has_text="Tampilkan filter jenis").locator("svg").click(force=True)
 
   def remote_filter(self):
-    self.page.locator("label").filter(has_text=re.compile("Tampilkan filter work")).locator('svg').click()
-    self.page.get_by_role("checkbox", name=re.compile("Kantor")).click()
-    self.page.get_by_role("checkbox", name=re.compile("Hibrid")).click()
-    self.page.get_by_role("checkbox", name=re.compile("Jarak jauh")).click()
-    self.page.locator("label").filter(has_text=re.compile("Tampilkan filter work")).locator('svg').click(force=True)
+    self.page.locator("label").filter(has_text="Tampilkan filter work").locator("svg").click()
+    self.page.get_by_role("checkbox", name="Kantor").click()
+    self.page.get_by_role("checkbox", name="Hibrid").click()
+    self.page.get_by_role("checkbox", name="Jarak jauh").click()
+    self.page.locator("label").filter(has_text="Tampilkan filter jenis").locator("svg").click(force=True)
 
   def min_salary(self):
-    self.page.locator("label").filter(has_text=re.compile("Tampilkan filter gaji minimum")).locator("svg").click()
-    self.page.get_by_role("radio", name="6 jt").click()
+    self.page.locator("label").filter(has_text="Tampilkan filter gaji minimum").locator("svg").click()
+    self.page.get_by_role("radio", name="8 jt").click()
 
   def time_range_filter(self):
     self.page.locator("label").filter(has_text="Tampilkan filter tanggal").locator('svg').click()
-    self.page.get_by_role("radio", name=re.compile("7 hari terakhir")).click()
+    self.page.get_by_role("radio", name=re.compile("3 hari terakhir")).click()
 
   def _company_filter_match(self, company_name: str):
     blacklist = self.config["search"].get("company_blacklist", [])
@@ -128,7 +129,7 @@ class JobstreetAutomation:
         for i in range(count):
             print(f"Processing question #{i + 1}...")
             q = questions.nth(i)
-            field = input_field_factory(q, self.store, salary_range_obj)
+            field = input_field_factory(q, self.store, self.config, salary_range_obj)
             human_delay(new_tab)
 
             if field.is_empty():
@@ -153,56 +154,69 @@ class JobstreetAutomation:
     submit_btn.click()
     human_delay(new_tab, 1500, 4000)
 
-  def _extract_salary_range(self, new_tab) -> SalaryRange | None:
-    salary_el = new_tab.locator('[data-automation="job-detail-salary"]')
+  def _extract_salary_range(self) -> SalaryRange | None:
+    salary_el = self.page.locator('[data-automation="job-detail-salary"]')
     if salary_el.count():
         salary_text = salary_el.inner_text()
         return parse_salary_range_idr(salary_text)
     
     return None
      
-
   def apply_jobs(self):
-      job_limit = self.config["search"].get("job_limit", 3)
+    job_limit = self.config["search"].get("job_limit", 3)
+    pagination_next_btn = self.page.locator("a[aria-label='Selanjutnya']")
 
-      # Wait for job cards
-      self.page.wait_for_selector("article[data-testid='job-card']", timeout=15000)
-      job_items = self.page.locator("article[data-testid='job-card']")
-      limit = min(job_limit, job_items.count())
+    applied_count = 0
+    curr_page = 1
 
-      for i in range(limit):
-        job = job_items.nth(i)
+    while applied_count < job_limit:
 
-        # Click job to open details
-        job.click()
-        human_delay(self.page)
+        # Wait for job cards on current page
+        self.page.wait_for_selector("article[data-testid='job-card']", timeout=15000)
+        job_items_per_page = self.page.locator("article[data-testid='job-card']")
+        limit = job_items_per_page.count()
 
-        # Company name scoped inside this job card
-        company_locator = job.locator("a[data-automation='jobCompany']")
-        quick_apply_btn = self.page.get_by_role("link").filter(has_text="Lamaran Cepat")
+        for i in range(limit):
+            if applied_count >= job_limit:
+                break  # stop if job limit reached
 
-        if company_locator.count():
-            company_name = company_locator.first.inner_text().strip()
-            if self._company_filter_match(company_name):
-                print(f"Skipped {company_name}. Blacklisted")
-                continue
-            
-            
-            if not quick_apply_btn.count():
-              print(f"Skipped {company_name}. No easy apply")
-              continue
+            job = job_items_per_page.nth(i)
+            job.click()
+            human_delay(self.page)
 
-            with self.page.expect_popup() as popup_info:
-              quick_apply_btn.click()
+            company_locator = job.locator("a[data-automation='jobCompany']")
+            quick_apply_btn = self.page.get_by_role("link").filter(has_text="Lamaran Cepat")
+            salary_range_obj = self._extract_salary_range()   
 
-            new_tab = popup_info.value
+            if company_locator.count():
+                company_name = company_locator.first.inner_text().strip()
+                if self._company_filter_match(company_name):
+                    print(f"Skipped {company_name}. Blacklisted")
+                    continue
 
-            salary_range_obj = self._extract_salary_range(new_tab)
-            self.answer_questions(new_tab, salary_range_obj)
-            new_tab.close()
-            
-        print(f"Applied job #{i + 1}")
+                if not quick_apply_btn.count():
+                    print(f"Skipped {company_name}. No easy apply")
+                    continue
 
+                with self.page.expect_popup() as popup_info:
+                    quick_apply_btn.click()
+
+                new_tab = popup_info.value
+
+                print(f"Applying {company_name}...")
+
+                self.answer_questions(new_tab, salary_range_obj)
+                new_tab.close()
+
+                applied_count += 1
+                print(f"Applied job #{applied_count}")
+
+        # After finishing this page, move to next if available
+        if applied_count < job_limit and pagination_next_btn.count():
+            pagination_next_btn.click()
+            curr_page += 1
+        else:
+            break
 
   def run(self):
       actions = [
@@ -214,7 +228,6 @@ class JobstreetAutomation:
         lambda: self.min_salary(),
         lambda: self.time_range_filter(),
         lambda: self.apply_jobs(),
-
       ]
 
       if not os.path.exists(self.config["auth"]["storage_path"]):

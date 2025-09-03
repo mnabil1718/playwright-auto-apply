@@ -6,9 +6,10 @@ qna:
   storage_path: ${JOBSTREET_QNA_STORE_PATH}
 
 search:
-  position: Backend Developer
+  position: Web Developer
   location: Jakarta Raya
-  job_limit: 10
+  job_limit: 4
+  min_salary: 7000000
   company_blacklist:
     - Diksha
     - Super indo

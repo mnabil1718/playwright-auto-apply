@@ -4,7 +4,7 @@ from .select_input_field import SelectInputField
 from .salary_select_input_field import SalarySelectInputField
 from utils import SalaryRange
 
-def input_field_factory(element, store, salary_range_obj: SalaryRange = None):
+def input_field_factory(element, store, config, salary_range_obj: SalaryRange = None):
     """
     factory method to init child class by element type
     """
@@ -14,13 +14,21 @@ def input_field_factory(element, store, salary_range_obj: SalaryRange = None):
 
     if checkboxes.count():
         return MultipleCheckboxInputField(element, store)
+    
     elif radios.count():
         return RadioInputField(element, store)
+    
     elif selects.count():
-        label = element.locator("label, legend").first.inner_text().strip()
-        if label == "Berapa gaji bulanan yang kamu inginkan?":
-            return SalarySelectInputField(element, store, salary_range_obj)
+        label = element.locator("label, legend").first.inner_text().strip().lower()
+
+        salary_keywords = [
+            "expected monthly basic salary",   # English
+            "gaji bulanan yang kamu inginkan"  # Indonesian
+        ]
+        if any(kw in label for kw in salary_keywords):
+            return SalarySelectInputField(element, store, config, salary_range_obj)
+        
         return SelectInputField(element, store)
 
-    print(f"⚠️ Unknown answer type: {element.locator('label, legend').first.inner_text().strip()}")
+    print(f"Unknown answer type: {element.locator('label, legend').first.inner_text().strip()}")
     return None

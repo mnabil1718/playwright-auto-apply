@@ -6,11 +6,11 @@ qna:
   storage_path: ${JOBSTREET_QNA_STORE_PATH}
 
 search:
-  position: Backend Developer
+  position: Software Engineer
   location: Jakarta Raya
-  job_limit: 40
+  job_limit: 20
   min_salary: 7000000
-  time_range: 7days
+  time_range: 3days
   work_type:
     - fulltime
     - contract
